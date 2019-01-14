@@ -16,6 +16,7 @@ def _prox_op(u, l):
     return z
 
 
+# TODO change the name
 class PossibilisticCMeans(cluster.FCMeans):
     def __init__(self, n_clusters, memberships_gamma, max_iter = 300, tol = 1e-4, verbose =
             Verbosity.NONE, centers = None, memberships = None, weights = None):
@@ -26,11 +27,9 @@ class PossibilisticCMeans(cluster.FCMeans):
     def _memberships_gradient(self, memberships, x, centroids):
         c,n = memberships.shape
         n,d = x.shape
-        z = np.zeros((c,n))
-        for i in range(n):
-            for r in range(c):
-                z[r,i] = self.m * memberships[r,i]**(self.m-1) * np.linalg.norm(x[i] - centroids[r])**2
-        return z
+        T = ((x - centroids[:,None]) ** 2).sum(axis=2)
+        memberships_grad = self.m * memberships ** (self.m - 1) * T
+        return memberships_grad
 
     def _alternate_descent(self):
         n, d = self.X.shape
@@ -60,11 +59,9 @@ class PossibilisticCMeans(cluster.FCMeans):
 
 
     def _memberships_hessian(self, new_memberships, new_centers, n, d, n_clusters):
-        z = np.zeros_like(new_memberships)
-        for i in range(n):
-            for r in range(n_clusters):
-                z[r,i] = self.m * np.linalg.norm(self.X[i] - new_centers[r])**2
-        return z
+        # TODO: tensor T is computed here and in gradient descent
+        T = ((self.X - new_centers[:,None]) ** 2).sum(axis=2)
+        return self.m * (self.m - 1) * T
 
 class PossibilisticSubspace(keller.Keller):
     def __init__(self, n_clusters, memberships_gamma, max_iter = 300, tol = 1e-4, verbose =

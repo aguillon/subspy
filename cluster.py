@@ -67,9 +67,9 @@ def _new_update_memberships(x, n_clusters, weights, centers, v = 2., m = 2., **k
     n,d = x.shape
     p = 1. / (1. - m)
     v_weights = weights ** v
-    T = (v_weights * (x[:,None] - centers) ** 2).sum(axis=2)
-    memberships = T**p / (np.sum(T**p, axis=1).reshape((-1,1)))
-    return memberships.T
+    T = (v_weights[:,None] * (x - centers[:,None]) ** 2).sum(axis=2)
+    memberships = T**p / (np.sum(T**p, axis=0))
+    return memberships
 
 @logging(Verbosity.MEMBERSHIPS, "log_memberships")
 def _update_memberships(x, n_clusters, weights, centers, v = 2., m = 2., **kwargs):
