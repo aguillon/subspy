@@ -41,7 +41,7 @@ class PossibilisticCMeans(cluster.FCMeans):
             if self.verbose & Verbosity.COST_FUNCTION:
                 self._log_cost(self.centers, self.memberships, self.weights)
             cst = np.min(1/self._memberships_hessian(self.memberships,
-                    self.centers, n, d, self.n_clusters))
+                    self.centers))
             print("Cst is {}".format(cst))
             #print("Cst is now {}".format(cst))
             new_memberships = _pfscm_prox_gradient(self.memberships, self._memberships_gradient,
@@ -58,7 +58,7 @@ class PossibilisticCMeans(cluster.FCMeans):
         return self.memberships, self.centers
 
 
-    def _memberships_hessian(self, new_memberships, new_centers, n, d, n_clusters):
+    def _memberships_hessian(self, new_memberships, new_centers):
         # TODO: tensor T is computed here and in gradient descent
         T = ((self.X - new_centers[:,None]) ** 2).sum(axis=2)
         return self.m * (self.m - 1) * T
