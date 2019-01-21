@@ -63,18 +63,10 @@ class SquarePenaltyPCM(cluster.FCMeans):
         return self.m * (self.m - 1) * T + 2 * self.sparsity_gamma
 
 
-
-def _sparse_prox_op(u, l):
-    print(u)
-    assert np.all(u >= 0)
-    c,n = u.shape
-    z = np.zeros((c,n))
-    for i in range(n):
-        for r in range(c):
-            z[r,i] = max(u[r,i] + 1 - l, 0)
-    print(z)
-    return z
-
+def _sparse_cost_function(u_zero, new_u, l):
+    (c,) = u_zero.shape
+    t = np.count_nonzero(new_u)
+    return l*t + np.abs(np.sum(new_u) - 1) + 1/2 * np.linalg.norm(u_zero - new_u)**2
 
 class SparsePCM(proximal_possibilistic.PossibilisticCMeans):
     def __init__(self, n_clusters, memberships_gamma, sparsity_gamma,
@@ -84,6 +76,25 @@ class SparsePCM(proximal_possibilistic.PossibilisticCMeans):
                 verbose=verbose, centers=centers, memberships=memberships,
                 weights=weights)
         self.sparsity_gamma = sparsity_gamma
+
+    def _sparse_prox_op(self, u, l):
+        print(u)
+        assert np.all(u >= 0)
+        c,n = u.shape
+        z = proximal_possibilistic._prox_op(u, l)
+        for i in range(n):
+            best_vect = z[:,i]
+            best_cost = _sparse_cost_function(z[:,i], best_vect,self.sparsity_gamma)
+            for k in range(c):
+                ixs = np.argpartition(best_vect, c-k-1)[:c-k-1]
+                ui = z[:,i].copy()    # FIXME il manque un morceau de renormalisation
+                ui[ixs] = 0
+                cost = _sparse_cost_function(z[:,i], ui, self.sparsity_gamma)
+                if cost <= best_cost:
+                    best_cost = cost
+                    best_vect = ui.copy()
+            z[:,i] = best_vect
+        return z
 
     def _alternate_descent(self):
         n, d = self.X.shape
@@ -99,7 +110,7 @@ class SparsePCM(proximal_possibilistic.PossibilisticCMeans):
             #print("Cst is {}".format(cst))
             #print("Cst is now {}".format(cst))
             new_memberships = _pfscm_prox_gradient(self.memberships, self._memberships_gradient,
-                    _sparse_prox_op, cst, prox_arg = cst * self.memberships_gamma,
+                    self._sparse_prox_op, cst, prox_arg = cst * self.memberships_gamma,
                     max_iter = 10, tol = self.tol,
                     grad_args = (self.X, self.centers))
             new_centers = self._update_centers(self.X, self.n_clusters,
@@ -110,4 +121,6 @@ class SparsePCM(proximal_possibilistic.PossibilisticCMeans):
             self.centers = new_centers
             self.memberships = new_memberships
         return self.memberships, self.centers
+
+
 
