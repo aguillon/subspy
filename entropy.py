@@ -42,7 +42,7 @@ def _update_weights(x, n_clusters, memberships, centers, gamma = 0.5, m = 2.):
                 np.asarray((x[i] - centers[r])).reshape((-1))**2
                 for i in range(n))/gamma
         # in the paper: tot += np.exp(-dispersions[j]/gamma)
-        # log trick
+        # log sum trick
         smallest_disp = max(neg_dispersions) # smallest dispersion
         log_total = np.log(np.sum(np.exp(neg_dispersions - smallest_disp)))
         log_weight = neg_dispersions - smallest_disp - log_total
