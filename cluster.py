@@ -58,8 +58,28 @@ class Clustering(object):
         return self.labels_
 
 class FuzzyClustering(Clustering):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, n_clusters,  centers = None, memberships = None,
+            weights = None, *args, **kwargs):
         Clustering.__init__(self, *args, **kwargs)
+        self.n_clusters = n_clusters
+        self.centers = centers
+        self.memberships = memberships
+        self.weights = weights
+
+    def _init_weights(self):
+        assert hasattr(self, "X"), "This method should be called after fit()"
+        _, d = self.X.shape
+        if self.weights is None:
+            self.weights = np.full((self.n_clusters, d), 1/d)  # Is there a constant matrix datatype in numpy?
+
+    def fit(self, X, y=None):
+        #  FIXME general framework for observations?
+        self._costs = []     # store inertia values
+        self.X = X
+        self.memberships, self.centers = self._alternate_descent()
+        self._inertia = self._compute_inertia(self.X, self.centers, self.memberships,
+                self.weights)
+
 
 
 @logging(Verbosity.MEMBERSHIPS, "log_memberships")
@@ -193,21 +213,9 @@ class FCMeans(FuzzyClustering):
     def __init__(self, n_clusters, max_iter = 300, tol = 1e-4, verbose =
             Verbosity.NONE, centers = None, memberships = None, weights = None,
             m = 2, v = 2):
-        FuzzyClustering.__init__(self, max_iter, tol, verbose)
-        self.n_clusters = n_clusters
-        self.centers = centers
-        self.memberships = memberships
-        self.weights = weights
+        super().__init__(self, max_iter, tol, verbose)
         self.m = m
         self.v = v
-
-    def fit(self, X, y=None):
-        #  FIXME general framework for observations?
-        self._costs = []     # store inertia values
-        self.X = X
-        self.memberships, self.centers = self._alternate_descent()
-        self._inertia = self._compute_inertia(self.X, self.centers, self.memberships,
-                self.weights)
 
     def _update_memberships(self, X, n_clusters, weights, centers):
         return _new_update_memberships(X, n_clusters, weights, centers, verbose = self.verbose)
