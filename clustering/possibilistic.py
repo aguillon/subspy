@@ -5,6 +5,56 @@ import proximal_possibilistic
 from config import Verbosity
 
 
+def _possibilistic_memberships(X, n_clusters, weights, centers, eta, **kwargs):
+    T = (weights[:, None] * ((X - centers[:, None]) ** 2)).sum(axis=2)
+    T *= -1/eta.reshape((-1,1))
+    return np.exp(T)
+
+class PCMeans(cluster.FuzzyClustering):
+    def __init__(self, n_clusters, eta_parameter,
+            max_iter = 300, tol = 1e-4, verbose =
+            Verbosity.NONE, centers = None, memberships = None, weights = None):
+        super().__init__(n_clusters, centers, memberships, weights, max_iter, tol, verbose)
+        self.eta_parameter = eta_parameter
+
+    def _update_memberships(self, X, n_clusters, weights, centers, eta):
+        return _possibilistic_memberships(X, n_clusters, weights, centers, eta, verbose = self.verbose)
+
+    def _update_centers(self, X, n_clusters, weights, memberships):
+        return cluster._update_centers(X, n_clusters, weights, memberships, verbose = self.verbose)
+
+    def _update_eta(self, X, memberships, centers, eta_parameter):
+        c,_ = memberships.shape
+        p = memberships > eta_parameter
+        etas = np.zeros((c,))
+        for r in range(c):
+            s = ((X[p[r]] - centers[r,:])**2).sum()
+            etas[r] = s/np.count_nonzero(p[r])
+        return etas
+
+    def _alternate_descent(self):
+        n, d = self.X.shape
+        self._init_weights()
+        centers = cluster._init_centers(self.centers, self.X, self.n_clusters)
+        memberships = cluster._init_memberships(self.memberships, centers, self.X, self.n_clusters)
+        for i in range(self.max_iter):
+            if self.verbose & Verbosity.COST_FUNCTION:
+                self._log_cost(centers, memberships, self.weights)
+            eta = self._update_eta(self.X, memberships, centers, self.eta_parameter)
+            new_memberships = self._update_memberships(self.X, self.n_clusters, self.weights, centers, eta)
+            new_centers = self._update_centers(self.X, self.n_clusters, self.weights, new_memberships)
+            if np.linalg.norm(new_centers - centers) < self.tol:
+                break
+            memberships = new_memberships
+            centers = new_centers
+        if self.verbose & Verbosity.COST_FUNCTION:
+            self._log_cost(centers, memberships, self.weights)
+        return memberships, centers
+
+    def _compute_inertia(self, X, centers, memberships, weights):   # eta
+        return 1 # TODO
+
+
 def _prox_op(u, l):
     c,n = u.shape
     z = np.zeros((c,n))
