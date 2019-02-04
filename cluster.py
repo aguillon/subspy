@@ -225,8 +225,7 @@ class FCMeans(FuzzyClustering):
 
     def _alternate_descent(self):
         n, d = self.X.shape
-        if self.weights is None:
-            self.weights = np.full((self.n_clusters, d), 1/d)  # Is there a constant matrix datatype in numpy?
+        self._init_weights()
         centers = _init_centers(self.centers, self.X, self.n_clusters)
         memberships = _init_memberships(self.memberships, centers, self.X, self.n_clusters)
         for i in range(self.max_iter):
