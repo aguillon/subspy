@@ -30,9 +30,9 @@ def weighted_fcm(x, n_clusters, weights, max_iter=300, tol=1e-4, centers=None, m
     centers = _init_centers(centers, x, n_clusters, **kwargs)
     memberships = _init_memberships(memberships, centers, x, n_clusters, **kwargs)
     for i in range(max_iter):
-        # FIXME : on veut pouvoir écrire les appels à update sans expliciter
+        # FIXME : on veut pouvoir \'ecrire les appels \`a update sans expliciter
         # la liste qui va contenir les logs
-        # Objet log avec lequel on intéragit au début de l'algo ?
+        # Objet log avec lequel on int\'eragit au d\'ebut de l'algo ?
         # print(_cost_function(x, memberships, centers, weights))
         new_memberships = _update_memberships(x, n_clusters, weights, centers, **kwargs)
         new_centers = _update_centers(x, n_clusters, weights, new_memberships, **kwargs)
@@ -79,6 +79,7 @@ class FuzzyClustering(Clustering):
         self.memberships, self.centers = self._alternate_descent()
         self._inertia = self._compute_inertia(self.X, self.centers, self.memberships,
                 self.weights)
+        self.labels_ = memberships_to_labels(self.memberships)
 
 
 
@@ -213,7 +214,7 @@ class FCMeans(FuzzyClustering):
     def __init__(self, n_clusters, max_iter = 300, tol = 1e-4, verbose =
             Verbosity.NONE, centers = None, memberships = None, weights = None,
             m = 2, v = 2):
-        super().__init__(self, max_iter, tol, verbose)
+        super().__init__(n_clusters, centers, memberships, weights, max_iter, tol, verbose)
         self.m = m
         self.v = v
 
@@ -231,9 +232,9 @@ class FCMeans(FuzzyClustering):
         for i in range(self.max_iter):
             if self.verbose & Verbosity.COST_FUNCTION:
                 self._log_cost(centers, memberships, self.weights)
-            # FIXME : on veut pouvoir écrire les appels à update sans expliciter
+            # FIXME : on veut pouvoir \'ecrire les appels \`a update sans expliciter
             # la liste qui va contenir les logs
-            # Objet log avec lequel on intéragit au début de l'algo ?
+            # Objet log avec lequel on int\'eragit au d\'ebut de l'algo ?
             # print(_cost_function(x, memberships, centers, weights))
             new_memberships = self._update_memberships(self.X, self.n_clusters, self.weights, centers)
             new_centers = self._update_centers(self.X, self.n_clusters, self.weights, new_memberships)
