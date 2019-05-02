@@ -5,15 +5,21 @@ import misc
 
 def plot_majority(clustering, threshold = 0.0, fig = None, colors = misc.colors,
         weak_color = None, _axis = True, gca_obj = None, depthshade = True):
+    if hasattr(clustering, "memberships"):
+        memberships = clustering.memberships
+    elif hasattr(clustering, "get_memberships"):
+        memberships = clustering.get_memberships()
+    else:
+        raise ValueError("No 'memberships' field or 'get_memberships' method")
     if fig is None:
         fig = plt.figure()
     (n,d) = clustering.X.shape
     if d == 2:
         ax = fig.gca()
         for i in range(n):
-            rmax = misc.majority_indice(clustering.memberships[:,i])
+            rmax = misc.majority_indice(memberships[:,i])
             color = misc.colors[rmax]
-            if clustering.memberships[rmax,i] >= threshold:
+            if memberships[rmax,i] >= threshold:
                 ax.plot(clustering.X[i,0], clustering.X[i,1],
                 marker="o", color = color)
             elif weak_color is not None:
@@ -21,9 +27,9 @@ def plot_majority(clustering, threshold = 0.0, fig = None, colors = misc.colors,
                 marker="+", color = weak_color)
     else:
         ax = fig.gca(projection='3d')
-        indices = np.argmax(clustering.memberships, axis=0)
+        indices = np.argmax(memberships, axis=0)
         colors = np.array(misc.colors)[indices]
-        mask = clustering.memberships[indices,np.arange(n)] > threshold
+        mask = memberships[indices,np.arange(n)] > threshold
         points = clustering.X[mask,:]
         ax.scatter(points[:,0], points[:,1], points[:,2], c = colors[mask], marker="p", depthshade = depthshade)
         if weak_color is not None:
