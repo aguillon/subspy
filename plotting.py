@@ -5,7 +5,7 @@ import matplotlib.colors as colors_module
 
 import misc
 
-def plot_majority(clustering, threshold = 0.0, fig = None, colors = misc.colors,
+def plot_majority(clustering, threshold = -1.0, fig = None, colors = misc.colors,
         weak_color = None, _axis = True, gca_obj = None, depthshade = True):
     if hasattr(clustering, "memberships"):
         memberships = clustering.memberships
@@ -16,32 +16,25 @@ def plot_majority(clustering, threshold = 0.0, fig = None, colors = misc.colors,
     if fig is None:
         fig = plt.figure()
     (n,d) = clustering.X.shape
+    indices = np.argmax(memberships, axis=0)
+    colors = np.array(misc.colors)[indices]
+    mask = memberships[indices,np.arange(n)] > threshold
+    points = clustering.X[mask,:]
+    other_points = clustering.X[~mask,:]
     if d == 2:
         ax = fig.gca()
-        for i in range(n):
-            rmax = misc.majority_indice(memberships[:,i])
-            color = misc.colors[rmax]
-            if memberships[rmax,i] >= threshold:
-                ax.plot(clustering.X[i,0], clustering.X[i,1],
-                marker="o", color = color)
-            elif weak_color is not None:
-                ax.plot(clustering.X[i,0], clustering.X[i,1],
-                marker="+", color = weak_color)
+        ax.scatter(points[:,0], points[:,1], c = colors[mask], marker="o")
+        if weak_color is not None:
+            ax.scatter(other_points[:,0], other_points[:,1], c = weak_color, marker="+")
     else:
         ax = fig.gca(projection='3d')
-        indices = np.argmax(memberships, axis=0)
-        colors = np.array(misc.colors)[indices]
-        mask = memberships[indices,np.arange(n)] > threshold
-        points = clustering.X[mask,:]
         ax.scatter(points[:,0], points[:,1], points[:,2], c = colors[mask], marker="p", depthshade = depthshade)
         if weak_color is not None:
-            points = clustering.X[~mask,:]
-            ax.scatter(points[:,0], points[:,1], points[:,2], c = weak_color, marker="+", depthshade = depthshade)
+            ax.scatter(other_points[:,0], other_points[:,1], other_points[:,2], c = weak_color, marker="+", depthshade = depthshade)
     if gca_obj:
         ax.view_init(gca_obj.elev, gca_obj.azim)
     elif _axis:
         ax.axis("equal")
-
     return fig
 
 def plot_centers(clustering, fig = None, colors = misc.colors, text=None):
