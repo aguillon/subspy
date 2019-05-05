@@ -47,21 +47,25 @@ def plot_centers(clustering, fig = None, colors = misc.colors, gca_obj = None,
         raise ValueError("No 'centers' field or 'get_centers' method")
     if fig is None:
         fig = plt.figure()
-    (n,d) = clustering.points.shape
-    (c,_) = clustering.centers.shape
+    (c,d) = centers.shape
     if d == 2:
         ax = fig.gca()
-        for r in range(c):
-            color = colors[r]
-            if text is None:
-                ax.plot(clustering.centers[r,0], clustering.centers[r,1], color =
-                        color, marker = "p", markersize=24)
-            else:
-                ax.text(clustering.centers[r,0], clustering.centers[r,1], text,
-                        color = color)
         colors = np.array(misc.colors)[:c]
         colors = [colorsys.rgb_to_hls(*colors_module.to_rgb(co)) for co in colors]
         colors = [colorsys.hls_to_rgb(co[0], 1 - 0.5 * (1 - co[1]), co[2]) for co in colors]
+        if text is None:
+            # for scatter, size is given as a surface...
+            ax.scatter(centers[:,0], centers[:,1], c=colors, marker="p", s=280)
+        else:
+            ax.text(centers[:,0], centers[:,1], text,
+                    color = colors)
+        if plot_lines:
+            color = "red"
+            for r in range(c):
+                ax.plot(centers[r:r+2,0], centers[r:r+2,0], color=color)
+    if gca_obj:
+        ax.view_init(gca_obj.elev, gca_obj.azim)
+    elif _axis:
         ax.axis("equal")
     return fig
 
