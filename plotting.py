@@ -37,7 +37,14 @@ def plot_majority(clustering, threshold = -1.0, fig = None, colors = misc.colors
         ax.axis("equal")
     return fig
 
-def plot_centers(clustering, fig = None, colors = misc.colors, text=None):
+def plot_centers(clustering, fig = None, colors = misc.colors, gca_obj = None,
+        text = None, plot_lines = False, _axis=True):
+    if hasattr(clustering, "centers"):
+        centers = clustering.centers
+    elif hasattr(clustering, "get_centers"):
+        centers = clustering.get_centers()
+    else:
+        raise ValueError("No 'centers' field or 'get_centers' method")
     if fig is None:
         fig = plt.figure()
     (n,d) = clustering.points.shape
