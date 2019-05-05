@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import colorsys
 import matplotlib.colors as colors_module
+from scipy.spatial import ConvexHull
 
 import misc
 
@@ -38,7 +39,7 @@ def plot_majority(clustering, threshold = -1.0, fig = None, colors = misc.colors
     return fig
 
 def plot_centers(clustering, fig = None, colors = misc.colors, gca_obj = None,
-        text = None, plot_lines = False, _axis=True):
+        text = None, plot_hull = False, _axis=True):
     if hasattr(clustering, "centers"):
         centers = clustering.centers
     elif hasattr(clustering, "get_centers"):
@@ -59,10 +60,11 @@ def plot_centers(clustering, fig = None, colors = misc.colors, gca_obj = None,
         else:
             ax.text(centers[:,0], centers[:,1], text,
                     color = colors)
-        if plot_lines:
+        if plot_hull:
             color = "red"
-            for r in range(c):
-                ax.plot(centers[r:r+2,0], centers[r:r+2,0], color=color)
+            hull = ConvexHull(centers)
+            hull = np.hstack((hull.vertices, hull.vertices)) # completing the loop
+            ax.plot(centers[hull,0], centers[hull,1], c=color)
     if gca_obj:
         ax.view_init(gca_obj.elev, gca_obj.azim)
     elif _axis:
