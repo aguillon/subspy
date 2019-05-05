@@ -13,4 +13,6 @@ class FactorizedFCM(nmf.NMF):
     def get_memberships(self):
         return self.W.T
 
+    def get_centers(self):
+        return self.H
 
