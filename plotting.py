@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import colorsys
+import matplotlib.colors as colors_module
 
 import misc
 
@@ -57,6 +59,9 @@ def plot_centers(clustering, fig = None, colors = misc.colors, text=None):
             else:
                 ax.text(clustering.centers[r,0], clustering.centers[r,1], text,
                         color = color)
+        colors = np.array(misc.colors)[:c]
+        colors = [colorsys.rgb_to_hls(*colors_module.to_rgb(co)) for co in colors]
+        colors = [colorsys.hls_to_rgb(co[0], 1 - 0.5 * (1 - co[1]), co[2]) for co in colors]
         ax.axis("equal")
     return fig
 
