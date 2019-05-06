@@ -52,11 +52,11 @@ def _positive_gradient(mat, grad_f, other_square, grad_args, beta_const=0.8,
 class NMF:
     """Simple NMF implementation for experimental purpose. You should probably
     use sklearn.decomposition.nmf instead."""
-    def __init__(self, n_components, method="mu", max_iter=300, tol=1e-4):
+    def __init__(self, n_components, descent_method="mu", max_iter=300, tol=1e-4):
         self.n_components = n_components
         self.W = None
         self.H = None
-        self.method = method
+        self.descent_method = descent_method
         self.max_iter = max_iter
         self.tol = tol
 
@@ -89,14 +89,14 @@ class NMF:
         return (W.T.dot(W.dot(Ht.T) - self.X)).T
 
     def _update_W(self, W, H):
-        if self.method == "mu":
+        if self.descent_method == "mu":
             return _mu_update_W(self.X, W, H)
         else:
             print("positive_gradient W")
             return _positive_gradient(W, self._gradient_W, H.dot(H.T), [H])
 
     def _update_H(self, W, H):
-        if self.method == "mu":
+        if self.descent_method == "mu":
             return _mu_update_H(self.X, W, H)
         else:
             print("positive_gradient H")

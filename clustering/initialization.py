@@ -10,4 +10,3 @@ def max_min_method(X, n_clusters):
         res.append(X[ix])
     return np.array(res)
 
-
