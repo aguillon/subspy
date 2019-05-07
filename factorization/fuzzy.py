@@ -57,20 +57,19 @@ class FactorizedFCM(nmf.NMF):
         return cluster._update_centers(self.X, self.n_components, None, W.T, m=1)
 
     def _update_W(self, W, H):
-        print(H)
-        W2 = np.zeros_like(W)
-        for i in range(W.shape[0]):
-            bounds = Bounds(np.zeros_like(W[i]), np.ones_like(W[i]))
+        n,n_clusters = W.shape
+        W3 = np.zeros_like(W)
+        for i in range(n):
+            bounds = Bounds(np.zeros(n_clusters), np.ones(n_clusters))
             ones = np.array(1)
-            constraint = LinearConstraint(np.ones(self.W.shape[1]).T, ones, ones)
+            constraint = LinearConstraint(np.ones(n_clusters).T, ones, ones)
             res = minimize(lambda memberships: _least_squares_cost(self.X[i], H, memberships),
                 W[i].T,
-                method="trust-constr",
+                method="SLSQP",
                 bounds=bounds,
                 constraints=[constraint])
-            print(res.x)
-            W2[i] = res.x
-        return W2
+            W3[i] = res.x
+        return W3
 
     def get_memberships(self):
         return self.W.T
