@@ -1,9 +1,7 @@
 import numpy as np
 import cluster
 import factorization.nmf as nmf
-from sklearn.decomposition import PCA
-from scipy.spatial import ConvexHull
-from itertools import combinations
+import factorization.commons as commons
 
 from scipy.optimize import LinearConstraint, Bounds, minimize
 
@@ -29,9 +27,8 @@ class FactorizedFCM(nmf.NMF):
     def __init__(self, n_components, max_iter=300, tol=1e-4):
         super().__init__(n_components, descent_method="cd", max_iter=max_iter,tol=tol)
 
-
     def _init_H(self):
-        all_indices = pca_hull_initialization(self.X)
+        all_indices = commons.pca_hull_initialization(self.X)
         print(all_indices)
         indices = np.random.choice(all_indices, self.n_components, replace=False)
         self.H = self.X[indices]
@@ -63,7 +60,7 @@ class FactorizedFCM(nmf.NMF):
             bounds = Bounds(np.zeros(n_clusters), np.ones(n_clusters))
             ones = np.array(1)
             constraint = LinearConstraint(np.ones(n_clusters).T, ones, ones)
-            res = minimize(lambda memberships: _least_squares_cost(self.X[i], H, memberships),
+            res = minimize(lambda memberships: commons._least_squares_cost(self.X[i], H, memberships),
                 W[i].T,
                 method="SLSQP",
                 bounds=bounds,

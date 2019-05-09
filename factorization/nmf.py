@@ -1,13 +1,12 @@
 import numpy as np
 import cluster
-
-EPSILON = np.finfo(np.float32).eps
+import factorization.commons as commons
 
 def _mu_update_W(X, W, H):
     W2 = W.copy()
     W2 = W2 * X.dot(H.T)
     denom = W.dot(H.dot(H.T))
-    denom[denom == 0] = EPSILON
+    denom[denom == 0] = commons.EPSILON
     W2 = W2 / denom
     return W2
 
@@ -15,7 +14,7 @@ def _mu_update_H(X, H, W):
     H2 = H.copy()
     H2 *= W.T.dot(X)
     denom = W.T.dot(W.dot(H))
-    denom[denom == 0] = EPSILON
+    denom[denom == 0] = commons.EPSILON
     H2 /= denom
     return H2
 
