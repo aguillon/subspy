@@ -21,16 +21,12 @@ def _mu_update_H(X, H, W):
 # Special case of projected gradient descent
 def _positive_gradient(mat, grad_f, other_square, grad_args, beta_const=0.8,
         max_iter=50, tol=1e-4):
-    # TODO: compute parts of the gradient here (W.T W H and W.T X)
-    #other_mat = grad_args[0] # W for H and vice-versa
-    #print(other_mat.shape)
-    #other_square = other_mat.dot(other_mat.T)
     for i in range(max_iter):
+        grad = grad_f(mat, *grad_args)
         # inner loop to find the right descent step (Armijo rule)
         for t in range(1,100):
             alpha = beta_const**t
             # TODO: restart from last alpha and go up or down from it
-            grad = grad_f(mat, *grad_args)
             new_mat = np.maximum(0, mat - alpha*grad)
             diff = new_mat - mat
             # See "Projected Gradient Methods for NMF" by Lin
@@ -91,14 +87,12 @@ class NMF:
         if self.descent_method == "mu":
             return _mu_update_W(self.X, W, H)
         else:
-            print("positive_gradient W")
             return _positive_gradient(W, self._gradient_W, H.dot(H.T), [H])
 
     def _update_H(self, W, H):
         if self.descent_method == "mu":
-            return _mu_update_H(self.X, W, H)
+            return _mu_update_H(self.X, H, W)
         else:
-            print("positive_gradient H")
             Ht = _positive_gradient(H.T, self._gradient_Ht, W.T.dot(W), [W])
             return Ht.T
 
@@ -113,11 +107,14 @@ class NMF:
             if error < self.tol:
                 print("%d itérations" % i)
                 break
+            # FIXME: implement logging protocol
             print(self.compute_inertia(self.X, new_W, new_H))
-            print(new_H)
             self.W = new_W
             self.H = new_H
         return self.W, self.H
 
     def compute_inertia(self, X, W, H):
         return np.linalg.norm(X - W.dot(H))**2
+
+    def get_memberships(self):
+        return self.W.T
