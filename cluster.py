@@ -4,6 +4,8 @@ import random
 import math
 from config import Verbosity, verbose_function, logging
 
+EPSILON = np.finfo(np.float32).eps
+
 def labels_to_memberships(labels, centers):
     n = labels.shape[0]
     k, _ = centers.shape
@@ -59,8 +61,8 @@ class Clustering(object):
 
 class FuzzyClustering(Clustering):
     def __init__(self, n_clusters,  centers = None, memberships = None,
-            weights = None, *args, **kwargs):
-        Clustering.__init__(self, *args, **kwargs)
+            weights = None, max_iter = 300, tol = 1e-4, verbose = Verbosity.NONE):
+        Clustering.__init__(self, max_iter, tol, verbose)
         self.n_clusters = n_clusters
         self.centers = centers
         self.memberships = memberships
@@ -190,6 +192,7 @@ def _update_centers(x, n_clusters, _weights, memberships, m = 2., **kwargs):
         # epsilons = np.random.randn(*clusters.shape)
         num = t.dot(x) # + epsilons
         denom = np.sum(t, axis=1).reshape((-1,1))
+        denom[denom == 0] = EPSILON
         clusters = 1./denom * num
 #        for r in range(n_clusters):
 #            for j in range(d):
@@ -222,7 +225,8 @@ class FCMeans(FuzzyClustering):
         return _new_update_memberships(X, n_clusters, weights, centers, verbose = self.verbose)
 
     def _update_centers(self, X, n_clusters, weights, memberships):
-        return _update_centers(X, n_clusters, weights, memberships, verbose = self.verbose)
+        return _update_centers(X, n_clusters, weights, memberships, verbose =
+                self.verbose, m = self.m)
 
     def _alternate_descent(self):
         n, d = self.X.shape
