@@ -26,14 +26,14 @@ class TSKMeans(cluster.FCMeans):
         ones = np.array(1)
         constraint = LinearConstraint(np.ones(d).T, ones, ones)
         for p in range(n_clusters):
-            res = minimize(lambda weights: self._compute_inertia(X, centers,
-                memberships, weights.reshape((-1,1)).T),
+            res = minimize(lambda weights: self._compute_inertia(X, centers[p,:],
+                memberships[p,:], weights.reshape((-1,1)).T),
                 old_weights[p,:].T,
                 method="SLSQP",
                 bounds=bounds,
                 constraints=[constraint])
             w[p,:] = res.x
-            print(res.x)
+            #print(res.x)
         return w
 
     def _alternate_descent(self):
@@ -51,12 +51,12 @@ class TSKMeans(cluster.FCMeans):
 #            print(new_centers)
 #            print("weights")
 #            print(self.weights)
-            print(self._compute_inertia(self.X, centers, memberships,
-                self.weights, _mode="debug"))
+#            print(self._compute_inertia(self.X, centers, memberships,
+#                self.weights, _mode="debug"))
             new_weights = self._update_weights(self.X, new_memberships,
                     new_centers, self.weights)
-            print(self._compute_inertia(self.X, centers, memberships,
-                new_weights, _mode="debug"))
+#            print(self._compute_inertia(self.X, centers, memberships,
+#                new_weights, _mode="debug"))
             if np.linalg.norm(new_centers - centers) < self.tol:
                 break
             memberships = new_memberships
