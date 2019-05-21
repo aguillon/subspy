@@ -5,6 +5,7 @@ import matplotlib.colors as colors_module
 from scipy.spatial import ConvexHull
 
 import misc
+import cluster
 
 def plot_majority(clustering, threshold = -1.0, fig = None, colors = misc.colors,
         weak_color = None, _axis = True, gca_obj = None, depthshade = True):
@@ -70,6 +71,25 @@ def plot_centers(clustering, fig = None, colors = misc.colors, gca_obj = None,
     elif _axis:
         ax.axis("equal")
     return fig
+
+
+def plot_series(data, label_source, y_val=-1, fig=None, weights=None):
+    if fig is None:
+        fig = plt.figure()
+    if hasattr(label_source, "labels_"):
+        labels = label_source.labels_
+    elif hasattr(label_source, "memberships"):
+        labels = cluster.memberships_to_labels(label_source.memberships)
+    else:
+        assert type(label_source) == np.ndarray
+        labels = label_source
+    ax = fig.gca()
+    _, d = data.shape
+    indices = np.arange(d)
+    for row in data[labels != y_val]:
+        ax.plot(indices, row, "b--")
+    for row in data[labels == y_val]:
+        ax.plot(indices, row, "r-")
 
 
 # TODO
