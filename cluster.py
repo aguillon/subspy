@@ -6,24 +6,16 @@ from config import Verbosity, verbose_function, logging
 
 EPSILON = np.finfo(np.float32).eps
 
-def labels_to_memberships(labels, centers):
+def labels_to_memberships(labels):
     n = labels.shape[0]
-    k, _ = centers.shape
+    k = len(np.unique(labels))
     memberships = np.zeros((k, n))
     for i,c in enumerate(labels):
         memberships[c,i] = 1
-    #print(memberships)
     return memberships
 
 def memberships_to_labels(memberships):
     return np.argmax(memberships, axis=0)
-
-    # FIXME obsolete ?
-    c, n = memberships.shape
-    labels = np.zeros((n,), dtype=int)
-    for i in range(n):
-        labels[i] = misc.majority_indice(memberships[:,i])
-    return labels
 
 # (Weighted) FCM algorithm: functional implementation
 @verbose_function
@@ -294,7 +286,7 @@ def _init_memberships(memberships, centers, points, n_clusters, **kwargs):
             memberships[r,i] = 1
     if type(memberships) is np.ndarray and len(memberships.shape) == 1:
         # sklearn 'labels' field
-        memberships = labels_to_memberships(memberships, centers)
+        memberships = labels_to_memberships(memberships)
     return memberships
 
 
